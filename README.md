@@ -25,7 +25,7 @@ My strategy is to continue in this fashion, always picking the word that leads t
 
 ## How well does this work?
 
-The strategy is guaranteed to find the solution in 5 moves or fewer. Here is a histogram of how many turns it takes for all 2315 words.
+The strategy is guaranteed to find the solution in 5 moves or fewer. Here is a histogram of how many turns it takes for all 2315 words. The code that generates these histograms can be found in [performance.ipynb](performance.ipynb).
 
 ![using any guess](strat_using_any_guess.png)
 
