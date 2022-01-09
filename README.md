@@ -33,7 +33,7 @@ So we will win in 2 moves 65 times out of 2315 (2.8% of the time), we will win i
 
 ![using only solution words as guesses](strat_using_solutions_only.png)
 
-Still, we are guaranteed to finish in 5 moves or fewer, and the expected value is only a bit higher, at 3.55 moves on average.
+Still, we are guaranteed to finish in 5 moves or fewer, and the expected value is only a bit higher than when all words are allowed, at 3.55 moves on average.
 
 ## How well can we hope to do?
 
