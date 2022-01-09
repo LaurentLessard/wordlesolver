@@ -37,6 +37,6 @@ Still, we are guaranteed to finish in 5 moves or fewer, and the expected value i
 
 ## How well can we hope to do?
 
-The heuristic I presented above is fundamentally _greedy_; we are only looking one move ahead when making each decisions. Simply because the candidate word list was reduced as much as possible, that doesn't mean the resulting smaller set of words will be easier to reduce in subsequent turns. I suspect there must exist better strategies that acheive e.g. a smaller expected number of moves, or a smaller probability of using 5 moves. 
+The heuristic I presented above is fundamentally _greedy_; we are only looking one move ahead when making each decisions. Simply because the candidate word list was reduced as much as possible, that doesn't mean the resulting smaller set of words will be easier to reduce in subsequent turns. I suspect there must exist better strategies that achieve e.g. a smaller expected number of moves, or a smaller probability of using 5 moves. 
 
 It would be interesting to see if a more complicated strategy is able to guarantee that a solution can be found in 4 turns!
