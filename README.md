@@ -17,23 +17,37 @@ I extracted these word lists directly from the Wordle source code (see [this art
 - `"10201"`: the "U" is in the correct spot, and the "S" and "P" belong to the solution but are in the wrong spot. This narrows down our solution to only two possible words ("PAUSE" and "PLUSH").
 - `"12000"`: the "T" is in the correct spot, and the "S" belongs to the solution but is in the wrong spot. Although this seems less restrictive than the previous case, there is only a single word that fits this description! ("ETHOS")
 
-In the case of "STUMP", the worst possible case is that we strike out and are still left with 730 possible solutions. My strategy for the first move is to pick the word for which the worst case is as good as possible. This turns out to be "ARISE" or "RAISE". With either of these first moves, again the worst possible outcome is that you strike out, except striking out now eliminates as many words as possible (mostly because r,s,a,i,e are very common letters). Starting with "ARISE" or "RAISE", we are guaranteed to reduce the list of possible solutions to no more than 168.
+So whenever we pick a word, there is a _distribution_ of possible outcomes. Each different outcome (e.g. `"10201"`) has an associated number of possible solutions associated with it. If we get lucky, that number will be small. In the case of "STUMP", the worst possible case is that we strike out and are still left with 730 possible solutions.
 
-My strategy is to continue in this fashion, always picking the word that leads to the largest worst-case reduction in candidate word list size. When there are ties, I use the following procedure:
-1. First, I prioritize guess words that actually belong to the list of remaining possible solutions. Sometimes guessing a word that isn't on the list of remaining solutions can be just as effective in the worst case sense, but I discard such options because they make it impossible to win in one turn.
-2. If there are still multiple candidate guess words, I compute the probability mass function across all possible outcomes, and pick the one with the largest [entropy](https://en.wikipedia.org/wiki/Entropy_(information_theory)). This biases the choice towards distributions that are _closer to being uniform_. It turns out that "RAISE" has slightly higher entropy than "ARISE", so my choice for the first guess is "RAISE".
+### Max-size prioritization
 
-## How well does this work?
+One possible strategy is to consider this "worst possible case" and to pick the word for which the worst case has the shortest possible word list. Doing this leads to a first move choice of "ARISE" or "RAISE". With either of these first moves, again the worst possible outcome is that you strike out, except striking out now eliminates as many words as possible (mostly because r,s,a,i,e are very common letters). Starting with "ARISE" or "RAISE", we are guaranteed to reduce the list of possible solutions to no more than 168.
 
-The strategy is guaranteed to find the solution in 5 moves or fewer. Here is a histogram of how many turns it takes for all 2315 words. The code that generates these histograms can be found in [performance.ipynb](performance.ipynb).
+### Max-entropy prioritization
 
-![using any guess](strat_using_any_guess.png)
+Another possible approach is to view the distribution over outcomes as a [probability mass function](https://en.wikipedia.org/wiki/Probability_mass_function) (PMF) and to pick the word that leads to a PMF with maximum [entropy](https://en.wikipedia.org/wiki/Entropy_(information_theory)). This biases the choice towards distributions that are _closer to being uniform_. By making the distribution close to uniform, we are ensuring that all possible outcomes are similarly bad (i.e. none of them are _too_ bad). The first move choice with the largest entropy is either "RAISE" or "SOARE", depending on whether you only use words in `solutions.txt` or allow all possible words, respectively.
 
-So we will win in 2 moves 65 times out of 2315 (2.8% of the time), we will win in 3 moves 45.1% of the time, 4 moves 48.8% of the time, and 5 moves 3.2% of the time. In all, this leads to an expected finishing time of 3.52 moves. Not bad! This assumes we are allowed to use the full set of available words as guesses, so sometimes the procedure will lead to using very unusual/uncommon words. It turns out that if you restrict the strategy to only use words from the smaller set `solutions.txt`, you can do almost as well. Here is the histogram when you limit yourself to that case:
+## How well do these strategies work?
 
-![using only solution words as guesses](strat_using_solutions_only.png)
+If we prioritize Max-size and use Max-entropy as a tiebreaker, we obtain the following histogram of results, depending on whether only use guesses from `solutions.txt` or whether we use all admissible words as valid guesses. The code for generating these histograms is in [performance.ipynb](performance.ipynb).
 
-Still, we are guaranteed to finish in 5 moves or fewer, and the expected value is only a bit higher than when all words are allowed, at 3.55 moves on average.
+|![using only solution words as guesses](strat_using_solutions_only.png) | ![using any guess](strat_using_any_guess.png) |
+|-|-|
+
+As we can see, we always finish in at most 5 moves, no matter what the unknown word is. If instead we prioritize max-entropy, we obtain slightly different results, shown below.
+
+|![using only solution words as guesses](strat_using_solutions_only_prioritize_entropy.png) | ![using any guess](strat_using_any_guess_prioritize_entropy.png) |
+|-|-|
+
+When prioritizing entropy, we tend to get better average performance, but the worst-case performance may be worse. Interestingly, allowing all 5-letter words leads to a solution where the average number of guesses is only 3.472, but there is a small chance that the algorithm will take 6 turns. Here is a summary of the four different cases considered above:
+
+|Guesses allowed	| First guess	| Heuristic used	| Average Guesses	| # > 4 guesses |
+|-----------------|-------------|-----------------|-----------------|---------------|
+|Only from solutions list	| "RAISE"	| Max-size	| 3.550	| 111 |
+|All 5-letter words	| "RAISE"	| Max-size |	3.522	| 73 |
+|Only from solutions list	| "RAISE"	| Max-entropy |	3.501	| 89 |
+|All 5-letter words	| "SOARE" |	Max-entropy	| 3.472	| 65* |
+
 
 ## How well can we hope to do?
 
