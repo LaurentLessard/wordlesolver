@@ -50,6 +50,12 @@ When prioritizing entropy, we get better average performance, but the worst-case
 
 When using the Max-entropy heuristic (*), the worst case takes 6 turns rather than 5.
 
+### Adversarial Wordle
+
+Since the strategies above consider all possible valid words, they are just as effective if the hidden word is chosen _adversarially_. That is, the hidden word can change to escape detection, so long as it remains consistent with past guesses. Such "evil" variants exist, such as [Absurdle](https://qntm.org/files/wordle/index.html). If we try the first heuristic from the table above (Max-size using only guesses from the solution list), we can solve Absurdle in 5 moves, as expected:
+
+![absurdle solution](absurdle_solution.png)
+
 ## How well can we hope to do?
 
 The heuristics presented above are fundamentally _greedy_; we are only looking one move ahead when making each decision. For example, reducing the candidate word list at every turn does not mean the resulting smaller set of words will be easier to reduce in subsequent turns. I suspect there must exist better strategies that achieve e.g. a smaller expected number of moves, or a smaller probability of using 5 moves. 
