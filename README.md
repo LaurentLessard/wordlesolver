@@ -39,18 +39,19 @@ As we can see, we always finish in at most 5 moves, no matter what the unknown w
 |![using only solution words as guesses](strat_using_solutions_only_prioritize_entropy.png) | ![using any guess](strat_using_any_guess_prioritize_entropy.png) |
 |-|-|
 
-When prioritizing entropy, we tend to get better average performance, but the worst-case performance may be worse. Interestingly, allowing all 5-letter words leads to a solution where the average number of guesses is only 3.472, but there is a small chance that the algorithm will take 6 turns. Here is a summary of the four different cases considered above:
+When prioritizing entropy, we get better average performance, but the worst-case performance is worse. Specifically, prioritizing entropy leads to a worst-case that may take 6 turns, although this is quite rare. Here is a summary of the four different cases considered above:
 
 |Guesses allowed	| First guess	| Heuristic used	| Average Guesses	| # > 4 guesses |
 |-----------------|-------------|-----------------|-----------------|---------------|
-|Only from solutions list	| "RAISE"	| Max-size	| 3.550	| 111 |
-|All 5-letter words	| "RAISE"	| Max-size |	3.522	| 73 |
-|Only from solutions list	| "RAISE"	| Max-entropy |	3.501	| 89 |
-|All 5-letter words	| "SOARE" |	Max-entropy	| 3.472	| 65* |
+|Only from solutions list	| "RAISE"	| Max-size	| 3.551	| 101 |
+|Only from solutions list	| "RAISE"	| Max-entropy |	3.495	| 93* |
+|All 5-letter words	| "RAISE"	| Max-size |	3.521	| 73 |
+|All 5-letter words	| "SOARE" |	Max-entropy	| 3.463	| 62* |
 
+When using the Max-entropy heuristic (*), the worst case takes 6.
 
 ## How well can we hope to do?
 
-The heuristic I presented above is fundamentally _greedy_; we are only looking one move ahead when making each decisions. Simply because the candidate word list was reduced as much as possible, that doesn't mean the resulting smaller set of words will be easier to reduce in subsequent turns. I suspect there must exist better strategies that achieve e.g. a smaller expected number of moves, or a smaller probability of using 5 moves. 
+The heuristics presented above are fundamentally _greedy_; we are only looking one move ahead when making each decision. For example, reducing the candidate word list at every turn does not mean the resulting smaller set of words will be easier to reduce in subsequent turns. I suspect there must exist better strategies that achieve e.g. a smaller expected number of moves, or a smaller probability of using 5 moves. 
 
-It would be interesting to see if a more complicated strategy is able to guarantee that a solution can be found in 4 turns!
+It would be interesting to see if a more complicated strategy is able to guarantee a solution in 4 turns!
