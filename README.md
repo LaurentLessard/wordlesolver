@@ -48,7 +48,7 @@ When prioritizing entropy, we get better average performance, but the worst-case
 |All 5-letter words	| "RAISE"	| Max-size |	3.521	| 73 |
 |All 5-letter words	| "SOARE" |	Max-entropy	| 3.463	| 62* |
 
-When using the Max-entropy heuristic (*), the worst case takes 6.
+When using the Max-entropy heuristic (*), the worst case takes 6 turns rather than 5.
 
 ## How well can we hope to do?
 
