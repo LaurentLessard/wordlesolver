@@ -35,12 +35,12 @@ First, let's start by prioritizing Max-size and use Max-entropy as a tiebreaker.
 3. Only allow guesses that are possible solutions _given the information we have so far_ (hard mode).
    
 Here are the histograms we obtain that show how many turns each strategy can take (as a distribution over all possible solutions).
-| ![using any guess](strat_using_any_guess.png)|![using only solution words as guesses](strat_using_solutions_only.png)  | ![hard mode](strat_using_hard_mode.png)
+| ![using any guess](figures/strat_using_any_guess.png)|![using only solution words as guesses](figures/strat_using_solutions_only.png)  | ![hard mode](figures/strat_using_hard_mode.png)
 |-|-|-|
 
 The code for generating these histograms is in [performance.ipynb](performance.ipynb). As we can see, we finish in at most 5 moves for regular play at 8 moves for hard mode, no matter what the unknown word is. If instead we prioritize max-entropy, we obtain slightly different results, shown below.
 
-| ![using any guess](strat_using_any_guess_prioritize_entropy.png)|![using only solution words as guesses](strat_using_solutions_only_prioritize_entropy.png)  | ![hard mode](strat_using_hard_mode_prioritize_entropy.png)
+| ![using any guess](figures/strat_using_any_guess_prioritize_entropy.png)|![using only solution words as guesses](figures/strat_using_solutions_only_prioritize_entropy.png)  | ![hard mode](figures/strat_using_hard_mode_prioritize_entropy.png)
 |-|-|-|
 
 When prioritizing entropy, we get better average performance, but the worst-case performance is worse. Specifically, prioritizing entropy leads to a worst-case that may take 6 turns in regular mode and 8 again in hard mode, although the 6's and 8's are quite rare. Here is a summary of the four different cases considered above:
@@ -60,7 +60,7 @@ Interestingly, the best first word to use is generally "RAISE", but in the case 
 
 Since the strategies above consider all possible valid words, they are just as effective if the hidden word is chosen _adversarially_. That is, the hidden word can change to escape detection, so long as it remains consistent with past guesses. Such "evil" variants exist, such as [Absurdle](https://qntm.org/files/wordle/index.html). If we try the first heuristic from the table above (Max-size using only guesses from the solution list), we can solve Absurdle in 5 moves, as expected:
 
-![absurdle solution](absurdle_solution.png)
+![absurdle solution](figures/absurdle_solution.png)
 
 ## How well can we hope to do?
 
