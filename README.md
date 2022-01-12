@@ -1,6 +1,6 @@
 # Wordle Solver
 
-This is simple [Wordle](https://www.powerlanguage.co.uk/wordle/) solver written in Julia.
+This is a simple [Wordle](https://www.powerlanguage.co.uk/wordle/) solver written in Julia.
 The code is in the notebook [wordle_solver.ipynb](wordle_solver.ipynb), which contains all necessary instructions. For more information about how the solver works, keep reading!
 
 ## About the strategy
