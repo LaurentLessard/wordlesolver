@@ -29,26 +29,32 @@ Another possible approach is to view the distribution over outcomes as a [probab
 
 ## How well do these strategies work?
 
-If we prioritize Max-size and use Max-entropy as a tiebreaker, we obtain the following histogram of results, depending on whether only use guesses from `solutions.txt` or whether we use all admissible words as valid guesses. The code for generating these histograms is in [performance.ipynb](performance.ipynb).
+First, let's start by prioritizing Max-size and use Max-entropy as a tiebreaker. We consider three possible cases:
+1. Allow any admissible guess word (use the extended word list).
+2. Only allow guesses that are possible solutions (words in `solutions.txt`).
+3. Only allow guesses that are possible solutions _given the information we have so far_ (hard mode).
+   
+Here are the histograms we obtain that show how many turns each strategy can take (as a distribution over all possible solutions).
+| ![using any guess](strat_using_any_guess.png)|![using only solution words as guesses](strat_using_solutions_only.png)  | ![hard mode](strat_using_hard_mode.png)
+|-|-|-|
 
-|![using only solution words as guesses](strat_using_solutions_only.png) | ![using any guess](strat_using_any_guess.png) |
-|-|-|
+The code for generating these histograms is in [performance.ipynb](performance.ipynb). As we can see, we finish in at most 5 moves for regular play at 8 moves for hard mode, no matter what the unknown word is. If instead we prioritize max-entropy, we obtain slightly different results, shown below.
 
-As we can see, we always finish in at most 5 moves, no matter what the unknown word is. If instead we prioritize max-entropy, we obtain slightly different results, shown below.
+| ![using any guess](strat_using_any_guess_prioritize_entropy.png)|![using only solution words as guesses](strat_using_solutions_only_prioritize_entropy.png)  | ![hard mode](strat_using_hard_mode_prioritize_entropy.png)
+|-|-|-|
 
-|![using only solution words as guesses](strat_using_solutions_only_prioritize_entropy.png) | ![using any guess](strat_using_any_guess_prioritize_entropy.png) |
-|-|-|
-
-When prioritizing entropy, we get better average performance, but the worst-case performance is worse. Specifically, prioritizing entropy leads to a worst-case that may take 6 turns, although this is quite rare. Here is a summary of the four different cases considered above:
+When prioritizing entropy, we get better average performance, but the worst-case performance is worse. Specifically, prioritizing entropy leads to a worst-case that may take 6 turns in regular mode and 8 again in hard mode, although the 6's and 8's are quite rare. Here is a summary of the four different cases considered above:
 
 |Guesses allowed	| First guess	| Heuristic used	| Average Guesses	| # > 4 guesses |
 |-----------------|-------------|-----------------|-----------------|---------------|
-|Only from solutions list	| "RAISE"	| Max-size	| 3.551	| 101 |
-|Only from solutions list	| "RAISE"	| Max-entropy |	3.495	| 93* |
 |All 5-letter words	| "RAISE"	| Max-size |	3.521	| 73 |
-|All 5-letter words	| "SOARE" |	Max-entropy	| 3.463	| 62* |
+|All 5-letter words	| "SOARE" |	Max-entropy	| 3.463	| 62 |
+|Only from solutions list	| "RAISE"	| Max-size	| 3.551	| 101 |
+|Only from solutions list	| "RAISE"	| Max-entropy |	3.495	| 93 |
+|Hard mode	| "RAISE"	| Max-size	| 3.644	| 282 |
+|Hard mode	| "RAISE"	| Max-entropy |	3.600	| 266 |
 
-When using the Max-entropy heuristic (*), the worst case takes 6 turns rather than 5.
+Interestingly, the best first word to use is generally "RAISE", but in the case of maximizing entropy, it is "SOARE". Since "SOARE" is not one of the admissible solution words, it is impossible to win in one turn when using the max-entropy approach (using "RAISE" as a first word for max-entropy only produces a slight change in the result).
 
 ### Adversarial Wordle
 
