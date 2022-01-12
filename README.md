@@ -56,24 +56,23 @@ When prioritizing entropy, we get better average performance, but the worst-case
 | ![using any guess](figures/strat_using_any_guess_prioritize_splits.png)|![using only solution words as guesses](figures/strat_using_solutions_only_prioritize_splits.png)  | ![hard mode](figures/strat_using_hard_mode_prioritize_splits.png)
 |-|-|-|
 
-
- Here is a summary of the four different cases considered above:
+ Here is a summary of the different cases considered above.
 
 |Guesses allowed	| First guess	| Heuristic used	| Average Guesses	| # > 4 guesses |
 |-----------------|-------------|-----------------|-----------------|---------------|
-|All 5-letter words	| "RAISE"	| Max-size |	3.521	| 73 |
-|All 5-letter words	| "SOARE" |	Max-entropy	| 3.463	| 62 |
-|All 5-letter words	| "TRACE" |	Max-splits	| 3.5326 | 196 |
-|Only from solutions list	| "RAISE"	| Max-size	| 3.551	| 101 |
-|Only from solutions list	| "RAISE"	| Max-entropy |	3.495	| 93 |
+|All 5-letter words	| "RAISE"	| Max-size |	3.5214	| 73 |
+|All 5-letter words	| "SOARE" |	Max-entropy	| 3.4631	| 62 |
+|All 5-letter words	| "TRACE" |	Max-splits	| 3.4320 | 67 |
+|Only from solutions list	| "RAISE"	| Max-size	| 3.5508	| 101 |
+|Only from solutions list	| "RAISE"	| Max-entropy |	3.4950	| 93 |
 |Only from solutions list	| "TRACE"	| Max-splits |	3.4549	| 83 |
 |Hard mode	| "RAISE"	| Max-size	| 3.644	| 282 |
 |Hard mode	| "RAISE"	| Max-entropy |	3.600	| 266 |
 |Hard mode	| "TRACE"	| Max-splits |	3.534	| 217 |
 
-Depending on the heuristic used and which word list is used for guesses, the best word can be "RAISE", "SOARE" or "TRACE". Since "SOARE" is not one of the admissible solution words, it is impossible to win in one turn when using the max-entropy approach (using "RAISE" as a first word for max-entropy only produces a slight change in the result).
+We observe a fundamental trade-off: it is possible to guarantee that we always win in at most 5 guesses by using Max-size, but this leads to a greater average number of guesses. Using Max-entropy or Max-splits leads to a better average, but will sometimes take 6 guesses. In hard mode, it seems that every heuristic will take 8 moves in the worst case.
 
-Interestingly, the heuristic that has the best average number of guesses is to actually _restrict_ the number of words used for guessing! (using Max-split with only guess words from the solution list). This speaks to the fact that these are fundamentally greedy heuristics, so we can expect such anomalies when comparing performance.
+Depending on the heuristic used and which word list is used for guesses, the best word can be "RAISE", "SOARE" or "TRACE". Since "SOARE" is not one of the admissible solution words, it is impossible to win in one turn when using the max-entropy approach (using "RAISE" as a first word for max-entropy only produces a slight change in the result).
 
 # Adversarial Wordle
 
