@@ -206,7 +206,7 @@ function plot_num_turns(turns::AbstractVector{Int}; title_text::String, saved_fi
     ylabel("frequency")
     title(title_text)
     for i = 1:n
-        text(i, 0.15, floor(Int, msol[1][i] * length(SOLUTION_WORDS)), horizontalalignment = "center")
+        text(i, 0.15, floor(Int, msol[1][i] * length(turns)), horizontalalignment = "center")
     end
     grid(zorder = 0)
 
