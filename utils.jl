@@ -382,16 +382,18 @@ function get_optimal_strategy_exhaustive(
         max_num_turns = maximum(num_turns)
         average_num_turns = Statistics.mean(num_turns)
 
+        if show_progress
+            push!(valid_guesses, (get_word(guess), max_num_turns, average_num_turns))
+        end
+
         if max_num_turns < best_max_num_turns || average_num_turns < best_average_num_turns
             best_max_num_turns = max_num_turns
             best_average_num_turns = average_num_turns
             best_num_turns = num_turns
             best_guess = guess
             best_strategy = strategy
-            if show_progress
-                push!(valid_guesses, (get_word(guess), best_max_num_turns, best_average_num_turns))
-            end
         end
+
         if show_progress
             update_progress(best_guess, best_max_num_turns, best_average_num_turns, num_skipped)
         end
