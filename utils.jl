@@ -372,10 +372,10 @@ function get_optimal_strategy_exhaustive(
             turns_budget = best_max_num_turns
         )
         if r === nothing
+            num_skipped += 1
             if show_progress
                 update_progress(best_guess, best_max_num_turns, best_average_num_turns, num_skipped)
             end
-            num_skipped += 1
             continue
         end
         num_turns, strategy = r
@@ -448,17 +448,61 @@ end
 
 """Display a strategy returned by `get_optimal_strategy_exhaustive.`
 """
-function print_strategy(
-    guess::T,
+function get_strategy_text(
+    guesses::AbstractVector{T},
     strategy::Dict{UInt8,Tuple{T,Dict}};
-    indent::Int = 0
-) where {T<:Union{Int,String}}
-    println(" "^indent, get_word(guess))
-    for (score, (shard_guess, shard_strat)) in strategy
-        parsed_score = lpad(string(score, base = 3), 5, "0")
-        println(" "^(indent + 1), parsed_score)
-        print_strategy(shard_guess, shard_strat, indent = indent + 2)
+    print_prefix::Bool = false
+)::String where {T<:Union{Int,String}}
+    output = ""
+
+    # 0. Prefix
+    if print_prefix
+        output *= """
+This is a guide to solving [Wordle](https://www.powerlanguage.co.uk/wordle/) in hard mode, brought
+to you by [Vincent Tjeng](https://vtjeng.com). It covers all 2315 possible solutions to the game.
+
+Wordle provides feedback on how close your guess is to the solution by coloring each of the five
+tiles green, yellow or grey. In the guide, each guess is accompanied by a table that maps the
+feedback to the most recent guess to the best next word to guess. To look up your next guess,
+you'll need to convert the colored tiles into a 5-digit number, with 
+`green = 2, yellow = 1, grey = 0`. Look under the 'hint' column for this number and use the
+corresponding word as your next guess.
+
+Here's a worked example from Jan 17, 2022.
+
+- SCAMP is our first guess. For this guess, the first tile is green and the rest are grey
+  (🟩⬜⬜⬜⬜), corresponding to the number '20000'.
+- Looking in the table under the section tiled 'scamp', we see that when the hint is '20000', the
+  next guess recommended is STERN.
+- STERN is our second guess. For this guess, the first and fourth tiles are green, the third tile
+  is yellow, and the rest are grey (🟩⬜🟨🟩⬜), corresponding to the number '20120'.
+- Looking in the table under the section titled 'scamp, stern', we see that when the hint is
+  '20120', the next guess recommended is SHIRE.
+- SHIRE is our third guess. We got lucky --- that's the word! Looking under the section titled
+  'scamp, stern, shire', we see that two other words were possible based on the feedback to our
+  first two guesses: SWORE and SHORE.
+
+"""
     end
+    # 1. Header
+    output *= "#"^length(guesses) * " " * join(map(get_word, guesses), ", ") * "\n\n"
+
+    # 2a. Table of best responses
+    output *= "| Hint  | Next Guess |\n"
+    output *= "| ----- | ---------- |\n"
+    sorted_strategy = sort(collect(strategy))
+    for (score, (shard_guess, _)) in sorted_strategy
+        parsed_score = lpad(string(score, base = 3), 5, "0")
+        output *= "| $(parsed_score) | $(get_word(shard_guess))      |\n"
+    end
+    output *= "| 22222 | (n/a)      |\n"
+    output *= "\n"
+
+    # 2b. Strategy for subsequent guesses.
+    for (_, (shard_guess, shard_strat)) in sorted_strategy
+        output *= get_strategy_text([guesses; shard_guess], shard_strat)
+    end
+    return output
 end
 
 
