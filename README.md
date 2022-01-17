@@ -43,32 +43,32 @@ First, let's start by prioritizing Max-size and use Max-entropy as a tiebreaker.
 3. Only allow guesses that are possible solutions _given the information we have so far_ (hard mode).
    
 Here are the histograms we obtain that show how many turns each strategy can take (as a distribution over all possible solutions).
-| ![using any guess](figures/strat_using_any_guess.png)|![using only solution words as guesses](figures/strat_using_solutions_only.png)  | ![hard mode](figures/strat_using_hard_mode.png)
+| ![using any guess](figures/strat_using_any_guess_prioritize_size.png)|![using only solution words as guesses](figures/strat_using_solutions_only_prioritize_size.png)  | ![hard mode](figures/strat_using_hard_mode_any_guess_prioritize_size.png)
 |-|-|-|
 
 The code for generating these histograms is in [performance.ipynb](performance.ipynb). As we can see, we finish in at most 5 moves for regular play at 8 moves for hard mode, no matter what the unknown word is. If instead we prioritize max-entropy, we obtain slightly different results, shown below.
 
-| ![using any guess](figures/strat_using_any_guess_prioritize_entropy.png)|![using only solution words as guesses](figures/strat_using_solutions_only_prioritize_entropy.png)  | ![hard mode](figures/strat_using_hard_mode_prioritize_entropy.png)
+| ![using any guess](figures/strat_using_any_guess_prioritize_entropy.png)|![using only solution words as guesses](figures/strat_using_solutions_only_prioritize_entropy.png)  | ![hard mode](figures/strat_using_hard_mode_any_guess_prioritize_entropy.png)
 |-|-|-|
 
 When prioritizing entropy, we get better average performance, but the worst-case performance is worse. Specifically, prioritizing entropy leads to a worst-case that may take 6 turns in regular mode and 8 again in hard mode, although the 6's and 8's are quite rare. Finally, we can prioritize Max-splits, and we obtain:
 
-| ![using any guess](figures/strat_using_any_guess_prioritize_splits.png)|![using only solution words as guesses](figures/strat_using_solutions_only_prioritize_splits.png)  | ![hard mode](figures/strat_using_hard_mode_prioritize_splits.png)
+| ![using any guess](figures/strat_using_any_guess_prioritize_splits.png)|![using only solution words as guesses](figures/strat_using_solutions_only_prioritize_splits.png)  | ![hard mode](figures/strat_using_hard_mode_any_guess_prioritize_splits.png)
 |-|-|-|
 
  Here is a summary of the different cases considered above.
 
 |Guesses allowed	| First guess	| Heuristic used	| Average Guesses	| # > 4 guesses |
 |-----------------|-------------|-----------------|-----------------|---------------|
-|All 5-letter words	| "RAISE"	| Max-size |	3.5214	| 73 |
-|All 5-letter words	| "SOARE" |	Max-entropy	| 3.4631	| 62 |
+|All 5-letter words	| "RAISE"	| Max-size |	3.5210	| 73 |
+|All 5-letter words	| "SOARE" |	Max-entropy	| 3.4635	| 62 |
 |All 5-letter words	| "TRACE" |	Max-splits	| 3.4320 | 67 |
-|Only from solutions list	| "RAISE"	| Max-size	| 3.5508	| 101 |
+|Only from solutions list	| "RAISE"	| Max-size	| 3.5503	| 100 |
 |Only from solutions list	| "RAISE"	| Max-entropy |	3.4950	| 93 |
 |Only from solutions list	| "TRACE"	| Max-splits |	3.4549	| 83 |
-|Hard mode	| "RAISE"	| Max-size	| 3.644	| 282 |
-|Hard mode	| "RAISE"	| Max-entropy |	3.600	| 266 |
-|Hard mode	| "TRACE"	| Max-splits |	3.534	| 217 |
+|Hard mode	| "RAISE"	| Max-size	| 3.6475	| 265 |
+|Hard mode	| "RAISE"	| Max-entropy |	3.6052	| 232 |
+|Hard mode	| "TRACE"	| Max-splits |	3.5317	| 195 |
 
 We observe a fundamental trade-off: it is possible to guarantee that we always win in at most 5 guesses by using Max-size, but this leads to a greater average number of guesses. Using Max-entropy or Max-splits leads to a better average, but will sometimes take 6 guesses. In hard mode, it seems that every heuristic will take 8 moves in the worst case.
 
