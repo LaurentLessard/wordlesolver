@@ -114,12 +114,12 @@ Base.Enums.@enum Heuristic begin
 end
 
 
-function find_move(
+function find_move_idx(
     guess_pool::AbstractVector{T},
-    solution_pool::AbstractVector{T};
+    solution_pool::AbstractVector{T},
+    group_sizes::Vector{Vector{Int}};
     heuristic::Heuristic = PRIORITIZE_ENTROPY
-)::T where {T<:Union{Int,String}}
-    group_sizes::Vector{Vector{Int}} = map(guess -> get_group_sizes(guess, solution_pool), guess_pool)
+)::Int where {T<:Union{Int,String}}
     maximum_group_size::Vector{Int} = map(maximum, group_sizes)
     entropy::Vector{Float64} = map(get_entropy, group_sizes)
     is_potential_solution::Vector{Bool} = map(guess -> guess in solution_pool, guess_pool)
@@ -141,8 +141,37 @@ function find_move(
         throw(ArgumentError("Unexpected heuristic."))
     end
 
-    # when solution scores are tied, we pick the lexicographically first word
-    return maximum(zip(solution_score, guess_pool))[2]
+    return argmax(collect(solution_score))
+end
+
+
+function find_move(
+    guess_pool::AbstractVector{T},
+    solution_pool::AbstractVector{T};
+    heuristic::Heuristic = PRIORITIZE_ENTROPY
+)::T where {T<:Union{Int,String}}
+    group_sizes::Vector{Vector{Int}} = map(guess -> get_group_sizes(guess, solution_pool), guess_pool)
+    idx = find_move_idx(guess_pool, solution_pool, group_sizes, heuristic = heuristic)
+    return guess_pool[idx]
+end
+
+
+function find_move_pool(
+    guess_pool::AbstractVector{T},
+    solution_pool::AbstractVector{T};
+    heuristic::Heuristic = PRIORITIZE_ENTROPY,
+    verbose::Bool = false
+)::Tuple{T,Dict{UInt8,Vector{T}}} where {T<:Union{Int,String}}
+    groups::Vector{Dict{UInt8,Vector{T}}} = map(w -> get_groups(w, solution_pool), guess_pool)
+    group_sizes::Vector{Vector{Int}} = map(e -> map(length, values(e)), groups)
+    idx = find_move_idx(guess_pool, solution_pool, group_sizes, heuristic = heuristic)
+    best_word::T = guess_pool[idx]
+    if verbose
+        println("Guess: $(get_word(best_word))")
+    end
+    remaining_groups::Dict{UInt8,Vector{T}} = groups[idx]
+
+    return best_word, remaining_groups
 end
 
 
@@ -231,23 +260,32 @@ function get_num_turns(
     guess_pool::AbstractVector{T},
     solution_pool::AbstractVector{T};
     heuristic::Heuristic = PRIORITIZE_ENTROPY,
-    first_guess::T = find_move(guess_pool, solution_pool, heuristic = heuristic),
-    hard_mode::Bool = false
+    hard_mode::Bool = false,
+    verbose::Bool = false
 )::Vector{Int} where {T<:Union{Int,String}}
-    @time begin
-        println("First guess: $(get_word(first_guess))")
-        @showprogress map(
-            w -> apply_strategy(
-                w,
-                first_guess,
-                guess_pool,
-                solution_pool,
+    if length(solution_pool) == 1
+        return [1]
+    end
+    num_turns = []
+    best_guess, remaining_groups = find_move_pool(
+        guess_pool,
+        solution_pool,
+        heuristic = heuristic,
+        verbose = verbose
+    )
+    for (score, group) in remaining_groups
+        if score == 3^5 - 1
+            push!(num_turns, 1)
+        else
+            append!(num_turns, 1 .+ get_num_turns(
+                hard_mode ? trim_pool(best_guess, score, guess_pool) : guess_pool,
+                group,
                 heuristic = heuristic,
                 hard_mode = hard_mode
-            ),
-            solution_pool
-        )
+            ))
+        end
     end
+    return num_turns
 end
 
 """
