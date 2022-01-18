@@ -7,7 +7,6 @@ using StatsBase
 # for Statistics.mean
 using Statistics
 
-
 function parse_word_list(filename::String)::Vector{String}
     s = open(filename) do file
         read(file, String)
@@ -65,6 +64,18 @@ function cache_word_scores(guess_pool::AbstractVector{String}, solution_pool::Ab
                 WORD_SCORES[i1, i2] = get_word_score(w1, w2)
             end
         end
+    end
+end
+
+
+# Maximum number of different equivalence classes that a single guess can split the solution
+# space into
+MAX_NUM_SHARDS = 3^5 - 5
+
+function optimize_max_num_shards(; verbose::Bool = true)
+    global MAX_NUM_SHARDS = maximum(map(guess -> length(get_groups(guess, SOLUTION_WORD_IDXS)), ALL_WORD_IDXS))
+    if verbose
+        println("Updated MAX_NUM_SHARDS to $(MAX_NUM_SHARDS).")
     end
 end
 
@@ -312,7 +323,7 @@ Returns
 2) A tuple with 3 entries:
   - The number of turns required by the strategy (in no particular order)
   - The optimal first word to guess.
-  - A strategy dictionary mapping each score we could observer to a tuple of:
+  - A strategy dictionary mapping each score we could observe to a tuple of:
     - The next word to guess, given that score.
     - A strategy dictionary for that guess.
 """
@@ -325,10 +336,6 @@ function get_optimal_strategy_exhaustive(
 )::Union{Nothing,Tuple{Vector{Int},T,Dict{UInt8,Tuple{T,Dict}}}} where {T<:Union{Int,String}}
     # returns number of turns, next guess, and a dictionary specifying what to do for subsequent turns.
     @assert turns_budget >= 1
-    if turns_budget == 1 && length(solution_pool) > 1
-        # no way to solve in a single turn if you have multiple solutions to consider
-        return nothing
-    end
     if length(solution_pool) == 1
         # if there is one remaining solution, we guess that word, and get a solution in one turn.
         return [1], solution_pool[1], Dict()
@@ -422,17 +429,51 @@ function get_optimal_strategy_exhaustive_helper(
         # Can't solve if we're down to 0 turns.
         return nothing
     end
+    if turns_budget == 1
+        if solution_pool == [initial_guess]
+            return ([1], Dict())
+        end
+        return nothing
+    end
+
     sharded_solution_pool = get_groups(initial_guess, solution_pool)
-    sharded_candidate_pool = get_groups(initial_guess, guess_pool)
+    if length(sharded_solution_pool) == 1
+        # No point using a guess that gives us no new information if there are multiple 
+        # possible solutions left
+        # One such example is an identical guess to the previous guess.
+        return nothing
+    end
+
+    # if the largest shard size is too large, we are done.
+    largest_shard_size = maximum(map(length, values(sharded_solution_pool)))
+    if turns_budget == 2 && largest_shard_size > 1
+        # no way to solve in a two turns (including this one) if you have multiple solutions to
+        # consider after this guess
+        return nothing
+    end
+    if turns_budget == 3 && largest_shard_size > MAX_NUM_SHARDS
+        # no way to solve in three turns (including this one) if we have more than MAX_NUM_SHARDS
+        # solutions to consider after this guess
+        return nothing
+    end
+    if hard_mode
+        sharded_guess_pool = get_groups(initial_guess, guess_pool)
+    end
     best_num_turns = []
     best_strategy::Dict{UInt8,Tuple{T,Dict}} = Dict()
-    for (score, solution_subpool) in sort(collect(sharded_solution_pool), by = x -> length(x[2]))
-        # try solving for the largest subpools first; we are most likely to fail there and be able to return early.
+    for (score, solution_subpool) in sort(
+        collect(sharded_solution_pool),
+        by = x -> length(x[2]),
+        rev = !hard_mode
+    )
+        # in hard mode, we start with the smallest subpools, since exploring those takes less time
+        # when _not_ in hard mode, we try solving for the largest subpools first;
+        # we are most likely to fail there and be able to return early.
         if solution_subpool == [initial_guess]
             push!(best_num_turns, 1)
         else
             r = get_optimal_strategy_exhaustive(
-                hard_mode ? sharded_candidate_pool[score] : guess_pool,
+                hard_mode ? sharded_guess_pool[score] : guess_pool,
                 solution_subpool,
                 hard_mode = hard_mode,
                 turns_budget = turns_budget - 1
