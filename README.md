@@ -85,11 +85,16 @@ Since the strategies above consider all possible valid words, they are just as e
 
 ![absurdle solution](figures/absurdle_solution.png)
 
+## Looking forward: how well can we hope to do?
+
+The heuristics presented above are fundamentally _greedy_; we are only looking one move ahead when making each decision. This can be sub-optimal. For example, reducing the candidate word list at every turn does not mean the resulting smaller set of words will be easier to reduce in subsequent turns. The main reason for this restriction is the combinatorial explosion of possible strategies if we attempt to look more moves ahead. If we start looking 2 or more moves ahead, it becomes prohibitively time-consuming to test all possible strategies. I suspect there must exist better strategies that achieve e.g. a smaller expected number of moves, or a smaller probability of using 5 moves... but finding them is challenging. It would be interesting to see if a more complicated strategy is able to guarantee a solution in 4 turns!
+
+
 ## Wordle in Hard Mode
 
-Wordle has a game mode known as "hard mode", in which any guess must be consistent with the hints provided from previous guesses. While it can take more turns for humans to solve Wordle in hard mode, it's actually more straightforward for a computer to generate a solution for Wordle (and prove that it is optimal) via brute force in hard mode, since the pool of guesses allowed diminishes rapidly after a few turns.
+In spite of the aforementioned computational difficulties, if we make the search space smaller, it may be possible to search all of it. For example, Wordle has a game mode known as "hard mode", in which any guess must be consistent with the hints provided from previous guesses. While it can take more turns for humans to solve Wordle in hard mode, it's actually more straightforward for a computer to generate a solution for Wordle (and prove that it is optimal) via brute force, since the pool of guesses allowed diminishes rapidly after a few turns.
 
-[hard_mode_exhaustive_search.ipynb](hard_mode_exhaustive_search.ipynb) demonstrates that we can solve Wordle in hard mode in no more than 5 turns, and that there is _no_ solution that guarantees that every word is solvable in 4 turns.
+[hard_mode_exhaustive_search.ipynb](hard_mode_exhaustive_search.ipynb) demonstrates that we can solve Wordle in hard mode in no more than 5 turns, and that there is _no_ solution that guarantees that every word is solvable in 4 turns. This is a vast improvement on the greedy strategies presented above, where every strategy we used could take as many as 8 moves in hard mode!
 
 Try out the [strategy](hard_mode_strategy.md) yourself! The strategy takes an average of 3.71 turns to find the word; we show the full distribution of turns for all 2315 possible solutions below.
 
@@ -99,8 +104,3 @@ As expected, our strategy beats Absurdle in 5 moves, even when respecting the "h
 
 ![absurdle solution, respecting hard mode constraint](figures/absurdle_hard_mode_solution.png)
 
-## Looking forward: how well can we hope to do?
-
-The heuristics presented above are fundamentally _greedy_; we are only looking one move ahead when making each decision. This can be sub-optimal. For example, reducing the candidate word list at every turn does not mean the resulting smaller set of words will be easier to reduce in subsequent turns. I suspect there must exist better strategies that achieve e.g. a smaller expected number of moves, or a smaller probability of using 5 moves.
-
-It would be interesting to see if a more complicated strategy is able to guarantee a solution in 4 turns!
