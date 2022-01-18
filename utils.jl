@@ -449,12 +449,12 @@ function get_optimal_strategy_exhaustive_helper(
     # 4. FAIL. Largest shard has too many solution candidates left for our `turns_budget`
     largest_shard_size = maximum(map(length, values(sharded_solution_pool)))
     if turns_budget == 2 && largest_shard_size > 1
-        # no way to solve in two turns if you have multiple solutions to
+        # no way to solve in two turns using `initial_guess` if you have multiple solutions to
         # consider after this guess
         return nothing
     end
     if turns_budget == 3 && largest_shard_size > MAX_NUM_SHARDS
-        # no way to solve in three turns if we have more than MAX_NUM_SHARDS
+        # no way to solve in three turns using `initial_guess` if we have more than MAX_NUM_SHARDS
         # solutions to consider after this guess
         return nothing
     end
