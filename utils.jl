@@ -7,7 +7,6 @@ using StatsBase
 # for Statistics.mean
 using Statistics
 
-
 function parse_word_list(filename::String)::Vector{String}
     s = open(filename) do file
         read(file, String)
@@ -65,6 +64,18 @@ function cache_word_scores(guess_pool::AbstractVector{String}, solution_pool::Ab
                 WORD_SCORES[i1, i2] = get_word_score(w1, w2)
             end
         end
+    end
+end
+
+
+# Maximum number of different equivalence classes that a single guess can split the solution
+# space into
+MAX_NUM_SHARDS = 3^5 - 5
+
+function optimize_max_num_shards(; verbose::Bool = true)
+    global MAX_NUM_SHARDS = maximum(map(guess -> length(get_groups(guess, SOLUTION_WORD_IDXS)), ALL_WORD_IDXS))
+    if verbose
+        println("Updated MAX_NUM_SHARDS to $(MAX_NUM_SHARDS).")
     end
 end
 
@@ -312,7 +323,7 @@ Returns
 2) A tuple with 3 entries:
   - The number of turns required by the strategy (in no particular order)
   - The optimal first word to guess.
-  - A strategy dictionary mapping each score we could observer to a tuple of:
+  - A strategy dictionary mapping each score we could observe to a tuple of:
     - The next word to guess, given that score.
     - A strategy dictionary for that guess.
 """
@@ -325,10 +336,6 @@ function get_optimal_strategy_exhaustive(
 )::Union{Nothing,Tuple{Vector{Int},T,Dict{UInt8,Tuple{T,Dict}}}} where {T<:Union{Int,String}}
     # returns number of turns, next guess, and a dictionary specifying what to do for subsequent turns.
     @assert turns_budget >= 1
-    if turns_budget == 1 && length(solution_pool) > 1
-        # no way to solve in a single turn if you have multiple solutions to consider
-        return nothing
-    end
     if length(solution_pool) == 1
         # if there is one remaining solution, we guess that word, and get a solution in one turn.
         return [1], solution_pool[1], Dict()
@@ -372,15 +379,19 @@ function get_optimal_strategy_exhaustive(
             turns_budget = best_max_num_turns
         )
         if r === nothing
+            num_skipped += 1
             if show_progress
                 update_progress(best_guess, best_max_num_turns, best_average_num_turns, num_skipped)
             end
-            num_skipped += 1
             continue
         end
         num_turns, strategy = r
         max_num_turns = maximum(num_turns)
         average_num_turns = Statistics.mean(num_turns)
+
+        if show_progress
+            push!(valid_guesses, (get_word(guess), max_num_turns, average_num_turns))
+        end
 
         if max_num_turns < best_max_num_turns || average_num_turns < best_average_num_turns
             best_max_num_turns = max_num_turns
@@ -388,10 +399,8 @@ function get_optimal_strategy_exhaustive(
             best_num_turns = num_turns
             best_guess = guess
             best_strategy = strategy
-            if show_progress
-                push!(valid_guesses, (get_word(guess), best_max_num_turns, best_average_num_turns))
-            end
         end
+
         if show_progress
             update_progress(best_guess, best_max_num_turns, best_average_num_turns, num_skipped)
         end
@@ -408,6 +417,8 @@ between, AND a fixed initial guess, return the optimal strategy to distinguish b
 solutions.
 
 See `get_optimal_strategy_exhaustive` for more on the parameters and interpreting the return value.
+
+NOTE: `turns_budget` includes one turn for the `initial_guess` we are about to make.
 """
 function get_optimal_strategy_exhaustive_helper(
     guess_pool::AbstractVector{T},
@@ -416,25 +427,60 @@ function get_optimal_strategy_exhaustive_helper(
     hard_mode::Bool = false,
     turns_budget = typemax(Int)
 )::Union{Nothing,Tuple{Vector{Int},Dict{UInt8,Tuple{T,Dict}}}} where {T<:Union{Int,String}}
+    # 1. FAIL: Can't solve if we're down to 0 turns.
     if turns_budget == 0
-        # Can't solve if we're down to 0 turns.
         return nothing
     end
+    if turns_budget == 1
+        if solution_pool == [initial_guess]
+            return ([1], Dict())
+        end
+        # 2. FAIL: Can't solve if the word guessed is not the only word in the pool.
+        return nothing
+    end
+
     sharded_solution_pool = get_groups(initial_guess, solution_pool)
-    sharded_candidate_pool = get_groups(initial_guess, guess_pool)
+    # 3. FAIL. Don't use a guess that doesn't give any new information.
+    # (An example where we end up in this state is that we guess the same word twice).    
+    if length(sharded_solution_pool) == 1
+        return nothing
+    end
+
+    # 4. FAIL. Largest shard has too many solution candidates left for our `turns_budget`
+    largest_shard_size = maximum(map(length, values(sharded_solution_pool)))
+    if turns_budget == 2 && largest_shard_size > 1
+        # no way to solve in two turns using `initial_guess` if you have multiple solutions to
+        # consider after this guess
+        return nothing
+    end
+    if turns_budget == 3 && largest_shard_size > MAX_NUM_SHARDS
+        # no way to solve in three turns using `initial_guess` if we have more than MAX_NUM_SHARDS
+        # solutions to consider after this guess
+        return nothing
+    end
+    if hard_mode
+        sharded_guess_pool = get_groups(initial_guess, guess_pool)
+    end
     best_num_turns = []
     best_strategy::Dict{UInt8,Tuple{T,Dict}} = Dict()
-    for (score, solution_subpool) in sort(collect(sharded_solution_pool), by = x -> length(x[2]))
-        # try solving for the largest subpools first; we are most likely to fail there and be able to return early.
+    for (score, solution_subpool) in sort(
+        collect(sharded_solution_pool),
+        by = x -> length(x[2]),
+        rev = !hard_mode
+    )
+        # in hard mode, we start with the smallest subpools, since exploring those takes less time
+        # when _not_ in hard mode, we try solving for the largest subpools first;
+        # we are most likely to fail there and be able to return early.
         if solution_subpool == [initial_guess]
             push!(best_num_turns, 1)
         else
             r = get_optimal_strategy_exhaustive(
-                hard_mode ? sharded_candidate_pool[score] : guess_pool,
+                hard_mode ? sharded_guess_pool[score] : guess_pool,
                 solution_subpool,
                 hard_mode = hard_mode,
                 turns_budget = turns_budget - 1
             )
+            # 5. FAIL. Some subpool is not solvable in the remaining budget.
             if r === nothing
                 return nothing
             end
@@ -448,17 +494,61 @@ end
 
 """Display a strategy returned by `get_optimal_strategy_exhaustive.`
 """
-function print_strategy(
-    guess::T,
+function get_strategy_text(
+    guesses::AbstractVector{T},
     strategy::Dict{UInt8,Tuple{T,Dict}};
-    indent::Int = 0
-) where {T<:Union{Int,String}}
-    println(" "^indent, get_word(guess))
-    for (score, (shard_guess, shard_strat)) in strategy
-        parsed_score = lpad(string(score, base = 3), 5, "0")
-        println(" "^(indent + 1), parsed_score)
-        print_strategy(shard_guess, shard_strat, indent = indent + 2)
+    print_prefix::Bool = false
+)::String where {T<:Union{Int,String}}
+    output = ""
+
+    # 0. Prefix
+    if print_prefix
+        output *= """
+This is a guide to solving [Wordle](https://www.powerlanguage.co.uk/wordle/) in hard mode, brought
+to you by [Vincent Tjeng](https://vtjeng.com). It covers all 2315 possible solutions to the game.
+
+Wordle provides feedback on how close your guess is to the solution by coloring each of the five
+tiles green, yellow or grey. In the guide, each guess is accompanied by a table that maps the
+feedback to the most recent guess to the best next word to guess. To look up your next guess,
+you'll need to convert the colored tiles into a 5-digit number, with 
+`green = 2, yellow = 1, grey = 0`. Look under the 'hint' column for this number and use the
+corresponding word as your next guess.
+
+Here's a worked example from Jan 17, 2022.
+
+- SCAMP is our first guess. For this guess, the first tile is green and the rest are grey
+  (🟩⬜⬜⬜⬜), corresponding to the number '20000'.
+- Looking in the table under the section tiled 'scamp', we see that when the hint is '20000', the
+  next guess recommended is STERN.
+- STERN is our second guess. For this guess, the first and fourth tiles are green, the third tile
+  is yellow, and the rest are grey (🟩⬜🟨🟩⬜), corresponding to the number '20120'.
+- Looking in the table under the section titled 'scamp, stern', we see that when the hint is
+  '20120', the next guess recommended is SHIRE.
+- SHIRE is our third guess. We got lucky --- that's the word! Looking under the section titled
+  'scamp, stern, shire', we see that two other words were possible based on the feedback to our
+  first two guesses: SWORE and SHORE.
+
+"""
     end
+    # 1. Header
+    output *= "#"^length(guesses) * " " * join(map(get_word, guesses), ", ") * "\n\n"
+
+    # 2a. Table of best responses
+    output *= "| Hint  | Next Guess |\n"
+    output *= "| ----- | ---------- |\n"
+    sorted_strategy = sort(collect(strategy))
+    for (score, (shard_guess, _)) in sorted_strategy
+        parsed_score = lpad(string(score, base = 3), 5, "0")
+        output *= "| $(parsed_score) | $(get_word(shard_guess))      |\n"
+    end
+    output *= "| 22222 | (n/a)      |\n"
+    output *= "\n"
+
+    # 2b. Strategy for subsequent guesses.
+    for (_, (shard_guess, shard_strat)) in sorted_strategy
+        output *= get_strategy_text([guesses; shard_guess], shard_strat)
+    end
+    return output
 end
 
 
