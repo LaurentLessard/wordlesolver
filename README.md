@@ -93,7 +93,7 @@ Wordle has a game mode known as "hard mode", in which any guess must be consiste
 
 Try out the [strategy](hard_mode_strategy.md) yourself! The strategy takes an average of 3.71 turns to find the word; we show the full distribution of turns for all 2315 possible solutions below.
 
-![hard mode, optimal](strat_using_solutions_only_hard_mode_optimal.png)
+![hard mode, optimal](figures/strat_using_solutions_only_hard_mode_optimal.png)
 
 As expected, our strategy beats Absurdle in 5 moves, even when respecting the "hard mode" constraint.
 
