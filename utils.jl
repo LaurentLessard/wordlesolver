@@ -417,6 +417,8 @@ between, AND a fixed initial guess, return the optimal strategy to distinguish b
 solutions.
 
 See `get_optimal_strategy_exhaustive` for more on the parameters and interpreting the return value.
+
+NOTE: `turns_budget` includes one turn for the `initial_guess` we are about to make.
 """
 function get_optimal_strategy_exhaustive_helper(
     guess_pool::AbstractVector{T},
@@ -425,34 +427,34 @@ function get_optimal_strategy_exhaustive_helper(
     hard_mode::Bool = false,
     turns_budget = typemax(Int)
 )::Union{Nothing,Tuple{Vector{Int},Dict{UInt8,Tuple{T,Dict}}}} where {T<:Union{Int,String}}
+    # 1. FAIL: Can't solve if we're down to 0 turns.
     if turns_budget == 0
-        # Can't solve if we're down to 0 turns.
         return nothing
     end
     if turns_budget == 1
         if solution_pool == [initial_guess]
             return ([1], Dict())
         end
+        # 2. FAIL: Can't solve if the word guessed is not the only word in the pool.
         return nothing
     end
 
     sharded_solution_pool = get_groups(initial_guess, solution_pool)
+    # 3. FAIL. Don't use a guess that doesn't give any new information.
+    # (An example where we end up in this state is that we guess the same word twice).    
     if length(sharded_solution_pool) == 1
-        # No point using a guess that gives us no new information if there are multiple 
-        # possible solutions left
-        # One such example is an identical guess to the previous guess.
         return nothing
     end
 
-    # if the largest shard size is too large, we are done.
+    # 4. FAIL. Largest shard has too many solution candidates left for our `turns_budget`
     largest_shard_size = maximum(map(length, values(sharded_solution_pool)))
     if turns_budget == 2 && largest_shard_size > 1
-        # no way to solve in a two turns (including this one) if you have multiple solutions to
+        # no way to solve in two turns if you have multiple solutions to
         # consider after this guess
         return nothing
     end
     if turns_budget == 3 && largest_shard_size > MAX_NUM_SHARDS
-        # no way to solve in three turns (including this one) if we have more than MAX_NUM_SHARDS
+        # no way to solve in three turns if we have more than MAX_NUM_SHARDS
         # solutions to consider after this guess
         return nothing
     end
@@ -478,6 +480,7 @@ function get_optimal_strategy_exhaustive_helper(
                 hard_mode = hard_mode,
                 turns_budget = turns_budget - 1
             )
+            # 5. FAIL. Some subpool is not solvable in the remaining budget.
             if r === nothing
                 return nothing
             end

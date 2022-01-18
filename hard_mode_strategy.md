@@ -4,7 +4,7 @@ to you by [Vincent Tjeng](https://vtjeng.com). It covers all 2315 possible solut
 Wordle provides feedback on how close your guess is to the solution by coloring each of the five
 tiles green, yellow or grey. In the guide, each guess is accompanied by a table that maps the
 feedback to the most recent guess to the best next word to guess. To look up your next guess,
-you'll need to convert the colored tiles into a 5-digit number, with
+you'll need to convert the colored tiles into a 5-digit number, with 
 `green = 2, yellow = 1, grey = 0`. Look under the 'hint' column for this number and use the
 corresponding word as your next guess.
 
@@ -16225,3 +16225,5 @@ Here's a worked example from Jan 17, 2022.
 | Hint  | Next Guess |
 | ----- | ---------- |
 | 22222 | (n/a)      |
+
+
