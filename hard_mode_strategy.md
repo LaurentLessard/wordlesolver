@@ -4,21 +4,18 @@ to you by [Vincent Tjeng](https://vtjeng.com). It covers all 2315 possible solut
 Wordle provides feedback on how close your guess is to the solution by coloring each of the five
 tiles green, yellow or grey. In the guide, each guess is accompanied by a table that maps the
 feedback to the most recent guess to the best next word to guess. To look up your next guess,
-you'll need to convert the colored tiles into a 5-digit number, with 
-`green = 2, yellow = 1, grey = 0`. Look under the 'hint' column for this number and use the
-corresponding word as your next guess.
+you'll need to convert the colored tiles into a 5-digit number, with 🟩=2, 🟨=1, ⬜=0.
+Look under the 'hint' column for this number and use the corresponding word as your next guess.
 
 Here's a worked example from Jan 17, 2022.
 
-- SCAMP is our first guess. For this guess, the first tile is green and the rest are grey
-  (🟩⬜⬜⬜⬜), corresponding to the number '20000'.
-- Looking in the table under the section tiled 'scamp', we see that when the hint is '20000', the
+- SCAMP is our first guess. For this guess, we receive the hint 🟩⬜⬜⬜⬜, corresponding to 20000.
+- In the table under the section tiled 'scamp', we see that when the hint is 20000, the
   next guess recommended is STERN.
-- STERN is our second guess. For this guess, the first and fourth tiles are green, the third tile
-  is yellow, and the rest are grey (🟩⬜🟨🟩⬜), corresponding to the number '20120'.
-- Looking in the table under the section titled 'scamp, stern', we see that when the hint is
-  '20120', the next guess recommended is SHIRE.
-- SHIRE is our third guess. We got lucky --- that's the word! Looking under the section titled
+- STERN is our second guess. For this guess, we receive the hint 🟩⬜🟨🟩⬜, corresponding to 20120.
+- In the table under the section titled 'scamp, stern', we see that when the hint is
+  20120, the next guess recommended is SHIRE.
+- SHIRE is our third guess. We got lucky; that's the word! Looking under the section titled
   'scamp, stern, shire', we see that two other words were possible based on the feedback to our
   first two guesses: SWORE and SHORE.
 
