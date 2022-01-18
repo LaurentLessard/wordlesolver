@@ -8,7 +8,7 @@ The main code is in the notebook [wordle_solver.ipynb](wordle_solver.ipynb), whi
 Wordle uses two word lists.
 
 - `solutions.txt` is the set of words that might appear as solutions to the puzzle. This list contains 2315 words.
-- `nonsolutions.txt` is the set of words that can be used as guesses, but will never appear as solutions. Contains 10657 words.
+- `nonsolutions.txt` is the set of additional words that can be used as guesses but will never appear as solutions. Contains 10657 words.
 
 I extracted these word lists directly from the Wordle source code (see [this article](https://bert.org/2021/11/24/the-best-starting-word-in-wordle/) for details). Every time we guess a word, we get to know whether any of the letters were correct and if they were in the right location in the word, similar to the game [Mastermind](<https://en.wikipedia.org/wiki/Mastermind_(board_game)>) but with words instead of colors. The information returned narrows down the list of possible solutions. Of course, we want to narrow down the list as much as possible, but the amount of narrowing depends on the information we receive.
 
