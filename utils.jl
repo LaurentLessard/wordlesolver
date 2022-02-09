@@ -272,18 +272,25 @@ function get_num_turns(
     solution_pool::AbstractVector{T};
     heuristic::Heuristic = PRIORITIZE_ENTROPY,
     hard_mode::Bool = false,
-    verbose::Bool = false
+    verbose::Bool = false,
+    starting_word::Union{T,Nothing} = nothing
 )::Vector{Int} where {T<:Union{Int,String}}
     if length(solution_pool) == 1
         return [1]
     end
     num_turns = []
-    best_guess, remaining_groups = find_move_pool(
-        guess_pool,
-        solution_pool,
-        heuristic = heuristic,
-        verbose = verbose
-    )
+    
+    if isnothing(starting_word)
+        best_guess, remaining_groups = find_move_pool(
+            guess_pool,
+            solution_pool,
+            heuristic = heuristic,
+            verbose = verbose
+        )
+    else
+        best_guess = starting_word
+        remaining_groups = get_groups(starting_word, solution_pool)
+    end
     for (score, group) in remaining_groups
         if score == 3^5 - 1
             push!(num_turns, 1)
@@ -552,9 +559,10 @@ end
 function plot_num_turns(
     turns::AbstractVector{Int};
     title_text::String,
-    saved_filename::Union{Nothing,String} = nothing
+    saved_filename::Union{Nothing,String} = nothing,
+    max_val::Int = 0
 )
-    n = maximum(turns)
+    n = ( max_val==0 ? maximum(turns) : max_val )
     msol = hist(turns, bins = 1:n+1, density = true, align = "left", zorder = 3)
     xlabel("number of guesses required")
     ylabel("frequency")
