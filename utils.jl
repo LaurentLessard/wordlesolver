@@ -16,10 +16,10 @@ function parse_word_list(filename::String)::Vector{String}
 end
 
 # list of words that can potentially be solutions
-SOLUTION_WORDS = parse_word_list("solutions.txt")
+SOLUTION_WORDS = parse_word_list("solutions_nyt.txt")
 
 # list of words that are valid guesses, but will never be solutions
-NONSOLUTION_WORDS = parse_word_list("nonsolutions.txt")
+NONSOLUTION_WORDS = parse_word_list("nonsolutions_nyt.txt")
 
 # all possible valid guesses
 ALL_WORDS = [SOLUTION_WORDS; NONSOLUTION_WORDS]
@@ -568,7 +568,7 @@ function plot_num_turns(
     ylabel("frequency")
     title(title_text)
     for i = 1:n
-        text(i, 0.15, floor(Int, msol[1][i] * length(turns)), horizontalalignment = "center")
+        text(i, 0.15, length(findall(turns.==i)), horizontalalignment = "center")
     end
     grid(zorder = 0)
 
